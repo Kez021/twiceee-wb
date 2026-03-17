@@ -1,0 +1,241 @@
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--a:#C4608A;--a2:rgba(196,96,138,0.1);--serif:var(--font-serif,Georgia,serif)}
+.nav{position:sticky;top:0;z-index:10;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);padding:14px 36px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-family:var(--serif);font-size:20px;font-weight:400;letter-spacing:.2em;color:var(--color-text-primary)}
+.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links a{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-secondary);text-decoration:none}
+.nav-links a:hover{color:var(--a)}
+.hero{display:grid;grid-template-columns:1fr 1fr;min-height:500px}
+.hero-l{padding:56px 44px;display:flex;flex-direction:column;justify-content:center;gap:20px}
+.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--a)}
+.htitle{font-family:var(--serif);font-size:clamp(42px,6vw,74px);font-weight:400;line-height:.95;color:var(--color-text-primary)}
+.htitle em{font-style:italic;color:var(--a)}
+.hdesc{font-size:13px;line-height:1.8;color:var(--color-text-secondary);max-width:360px}
+.srow{display:flex;flex-wrap:wrap;gap:7px}
+.schip{display:inline-flex;gap:5px;align-items:center;padding:7px 13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);text-decoration:none;font-size:11px;color:var(--color-text-primary);white-space:nowrap}
+.schip:hover{border-color:var(--a);color:var(--a)}
+.shandle{color:var(--color-text-secondary);font-size:10px}
+.hero-r{position:relative;background:var(--color-background-secondary);overflow:hidden;min-height:400px}
+.hero-img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .5s}
+.dots-bar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;border:none;padding:0;transition:background .2s}
+.dot.on{background:white}
+.fbanner{background:var(--color-background-secondary);border-top:0.5px solid var(--color-border-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);padding:26px 44px}
+.flabel{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--a);margin-bottom:9px}
+.ftext{font-family:var(--serif);font-size:clamp(15px,2.2vw,20px);font-weight:400;font-style:italic;line-height:1.55;color:var(--color-text-primary)}
+.fcount{font-size:11px;color:var(--color-text-secondary);margin-top:9px}
+.sec{padding:56px 44px}
+.sech{display:flex;align-items:baseline;gap:18px;margin-bottom:44px;padding-bottom:18px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.secn{font-size:10px;letter-spacing:.18em;color:var(--a);text-transform:uppercase}
+.sect{font-family:var(--serif);font-size:clamp(24px,3.5vw,38px);font-weight:400;color:var(--color-text-primary)}
+.mgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--color-border-tertiary)}
+.mcard{background:var(--color-background-primary);padding:24px 20px;cursor:pointer;transition:background .15s;border-top:2px solid transparent}
+.mcard:hover{background:var(--color-background-secondary);border-top-color:var(--cc,var(--a))}
+.mnum{font-size:10px;letter-spacing:.15em;color:var(--color-text-secondary);margin-bottom:12px}
+.mname{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--color-text-primary);margin-bottom:2px}
+.mfull{font-size:11px;color:var(--color-text-secondary);margin-bottom:12px}
+.mrole{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--a);margin-bottom:10px}
+.msym{display:inline-block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;background:var(--a2);color:var(--a);border-radius:var(--border-radius-md);margin-bottom:14px}
+.mdesc{font-size:12px;color:var(--color-text-secondary);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px}
+.mig{font-size:11px;color:var(--a);text-decoration:none}
+.mig:hover{text-decoration:underline}
+.mdetail{display:none;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.dh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;padding-bottom:28px;border-bottom:0.5px solid var(--color-border-tertiary);flex-wrap:wrap;gap:16px}
+.dnum{font-size:10px;letter-spacing:.18em;color:var(--color-text-secondary);margin-bottom:10px}
+.dname{font-family:var(--serif);font-size:clamp(36px,5vw,56px);font-weight:400;color:var(--color-text-primary);margin-bottom:3px;padding-left:18px}
+.dfull{font-size:13px;color:var(--color-text-secondary);padding-left:18px}
+.drole{font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-top:8px;padding-left:18px}
+.backbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:var(--color-text-secondary);white-space:nowrap;flex-shrink:0}
+.backbtn:hover{border-color:var(--a);color:var(--a)}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:32px}
+.dlabel{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--a);margin-bottom:7px}
+.dval{font-size:13px;color:var(--color-text-primary);line-height:1.6}
+.dfactbox{background:var(--color-background-secondary);border-left:2px solid var(--a);padding:18px 22px;border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;margin-bottom:28px}
+.digbtn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border:0.5px solid var(--a);border-radius:var(--border-radius-md);color:var(--a);font-size:11px;letter-spacing:.08em;text-decoration:none}
+.digbtn:hover{background:var(--a2)}
+.mvsec{background:var(--color-background-secondary)}
+.mvlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--color-border-tertiary)}
+.mvi{background:var(--color-background-primary);padding:20px 26px;display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:var(--color-text-primary);transition:background .15s;gap:14px}
+.mvi:hover{background:var(--color-background-secondary)}
+.mvt{font-family:var(--serif);font-size:18px;font-weight:400;margin-bottom:2px}
+.mvm{font-size:11px;color:var(--color-text-secondary)}
+.mvr{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.mvv{font-size:12px;font-weight:500;color:var(--a);letter-spacing:.08em}
+.mvarr{font-size:14px;color:var(--color-text-secondary)}
+.mvi:hover .mvarr{color:var(--a)}
+.ngrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ncard{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:22px}
+.ncat{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--a);margin-bottom:9px}
+.ntitle{font-family:var(--serif);font-size:17px;font-weight:400;line-height:1.35;color:var(--color-text-primary);margin-bottom:9px}
+.nsumm{font-size:12px;line-height:1.65;color:var(--color-text-secondary)}
+.ndate{font-size:10px;color:var(--color-text-secondary);margin-top:12px}
+.nload{text-align:center;padding:44px;color:var(--color-text-secondary);font-family:var(--serif);font-size:17px;font-style:italic}
+.refbtn{margin-top:24px;padding:9px 22px;border:0.5px solid var(--color-border-secondary);background:transparent;border-radius:var(--border-radius-md);font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:var(--color-text-secondary)}
+.refbtn:hover{border-color:var(--a);color:var(--a)}
+.footer{padding:36px 44px;border-top:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.fbrand{font-family:var(--serif);font-size:16px;letter-spacing:.2em;font-weight:400;color:var(--color-text-primary)}
+.fnote{font-size:11px;color:var(--color-text-secondary)}
+@media(max-width:640px){
+  .hero{grid-template-columns:1fr}
+  .hero-r{min-height:260px}
+  .mgrid{grid-template-columns:1fr}
+  .mvlist{grid-template-columns:1fr}
+  .ngrid{grid-template-columns:1fr}
+  .sec,.fbanner{padding:44px 22px}
+  .nav{padding:12px 22px}
+  .nav-links{display:none}
+  .dgrid{grid-template-columns:1fr;gap:20px}
+  .dh{flex-direction:column}
+}
+</style>
+
+<nav class="nav">
+  <div class="nav-brand">TWICE</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#members">Members</a></li>
+    <li><a href="#music">Music</a></li>
+    <li><a href="#news">News</a></li>
+  </ul>
+</nav>
+
+<section class="hero" id="about">
+  <div class="hero-l">
+    <div class="eyebrow">Est. October 20, 2015 · JYP Entertainment</div>
+    <h1 class="htitle">Touch you<br><em>twice</em></h1>
+    <p class="hdesc">Nine members from three countries. A decade of music that has defined an era. TWICE bridges pop perfection and genuine human connection — every performance a reminder of why they are K-pop's most beloved group.</p>
+    <div class="srow" id="srow"></div>
+  </div>
+  <div class="hero-r">
+    <img class="hero-img" id="slide" src="" alt="TWICE">
+    <div class="dots-bar" id="dots"></div>
+  </div>
+</section>
+
+<div class="fbanner">
+  <div class="flabel">Did You Know</div>
+  <div class="ftext" id="ftxt"></div>
+  <div class="fcount" id="fcnt"></div>
+</div>
+
+<section class="sec" id="members">
+  <div class="sech"><span class="secn">01</span><h2 class="sect">The Members</h2></div>
+  <div class="mgrid" id="mgrid"></div>
+  <div class="mdetail" id="mdetail"></div>
+</section>
+
+<section class="sec mvsec" id="music">
+  <div class="sech"><span class="secn">02</span><h2 class="sect">Most Viewed</h2></div>
+  <div class="mvlist" id="mvlist"></div>
+</section>
+
+<section class="sec" id="news">
+  <div class="sech"><span class="secn">03</span><h2 class="sect">Latest Updates</h2></div>
+  <div id="news-wrap"><div class="nload">Loading latest news...</div></div>
+  <button class="refbtn" onclick="fetchNews()">Refresh</button>
+</section>
+
+<footer class="footer">
+  <div class="fbrand">TWICE</div>
+  <div class="fnote">Fan Page · Not affiliated with JYP Entertainment</div>
+</footer>
+
+<script>
+const SOCIAL=[
+  {n:"Instagram",h:"@twicetagram",u:"https://www.instagram.com/twicetagram/"},
+  {n:"X / Twitter",h:"@JYPETWICE",u:"https://x.com/JYPETWICE"},
+  {n:"YouTube",h:"TWICE",u:"https://www.youtube.com/@TWICE"},
+  {n:"TikTok",h:"@twice_tiktok_official",u:"https://www.tiktok.com/@twice_tiktok_official"},
+  {n:"Facebook",h:"JYPETWICE",u:"https://www.facebook.com/JYPETWICE"},
+];
+const PHOTOS=[
+  "https://i.imgur.com/4nxbvEh.jpg",
+  "https://i.imgur.com/g7Cs0dv.jpg",
+  "https://i.imgur.com/Sk48EPH.jpg",
+  "https://i.imgur.com/wl3C5yC.jpg",
+  "https://i.imgur.com/GMpQepQ.jpg",
+];
+const FACTS=[
+  "TWICE debuted on October 20, 2015, through JYP's reality competition 'SIXTEEN' — 7 chosen from 16 trainees.",
+  "The name 'TWICE' represents touching people's hearts twice: once through the ears, once through the eyes.",
+  "TWICE is the first K-pop girl group to have 10 music videos each surpass 100 million YouTube views.",
+  "They are the best-selling girl group in South Korean history by total certified album sales.",
+  "TWICE spans three nationalities: 5 Korean, 3 Japanese, 1 Taiwanese — built intentionally for global reach.",
+  "In 2022, TWICE became the first K-pop girl group to headline a sold-out arena tour in the United States.",
+  "'Like OOH-AHH' made TWICE the first K-pop act to debut with a music video reaching 100 million YouTube views.",
+  "The official fandom name is 'ONCE' — because ONCE loves TWICE.",
+  "TWICE has sold over 10 million albums cumulatively across their discography.",
+  "In 2023, TWICE performed at US Bank Stadium in Minneapolis — the first K-pop girl group to perform at an NFL venue.",
+];
+const MEMBERS=[
+  {name:"Nayeon",full:"Im Nayeon",born:"Sep 22, 1995",origin:"Seoul, South Korea",role:"Main Vocalist · Lead Dancer",sym:"Rabbit",ig:"https://instagram.com/nayeonyny/",igh:"@nayeonyny",c:"#D4537E",desc:"The eldest and symbolic face of TWICE — Nayeon's bright soprano and undeniable stage magnetism set the tone from the very beginning.",fact:"Trained at JYP for 7 years before debuting. Her 'bunny teeth' smile became one of K-pop's most recognized features. She became the first TWICE member to release a solo album with 'IM NAYEON' in 2022."},
+  {name:"Jeongyeon",full:"Yoo Jeongyeon",born:"Sep 1, 1996",origin:"Suwon, South Korea",role:"Lead Vocalist",sym:"Koala",ig:"https://instagram.com/jy_piece/",igh:"@jy_piece",c:"#3B6D11",desc:"The grounded heart of TWICE — Jeongyeon's warm, resonant vocals and unflinching authenticity bring steadiness to the group.",fact:"Younger sister of actress Gong Seungyeon. Her short hair became a defining aesthetic statement in K-pop. She took a hiatus in 2020–2021 for health reasons and returned stronger than ever."},
+  {name:"Momo",full:"Hirai Momo",born:"Nov 9, 1996",origin:"Kyoto, Japan",role:"Main Dancer · Sub Vocalist",sym:"Peach",ig:"https://instagram.com/highmomo/",igh:"@highmomo",c:"#BA7517",desc:"A dancer's dancer — Momo's body control and musicality are legendary, effortlessly commanding stages from Seoul to Los Angeles.",fact:"Eliminated from SIXTEEN but reinstated by producer Park Jinyoung after overwhelming public demand — a pivotal moment in K-pop history. Widely considered one of the finest dancers in contemporary K-pop."},
+  {name:"Sana",full:"Minatozaki Sana",born:"Dec 29, 1996",origin:"Osaka, Japan",role:"Sub Vocalist",sym:"Hamster",ig:"https://instagram.com/m.by_sana/",igh:"@m.by_sana",c:"#993556",desc:"Radiant and utterly disarming — Sana's buoyant energy and natural charm make every performance feel like a personal serenade.",fact:"Her ad-lib 'Shy shy shy' from CHEER UP became a global K-pop catchphrase in 2016. Consistently ranked among the most popular TWICE members in Japan. Known for her warmly affectionate personality toward fellow members."},
+  {name:"Jihyo",full:"Park Jihyo",born:"Feb 1, 1997",origin:"Gokseong, South Korea",role:"Leader · Main Vocalist",sym:"Heart",ig:"https://instagram.com/notjihyo/",igh:"@notjihyo",c:"#71243E",desc:"The unwavering center of TWICE — a decade of dedication forged a vocalist and leader whose commitment to the group is total.",fact:"Trained at JYP for a remarkable 10 years before debuting — among the longest tenures in K-pop history. Released her debut solo mini-album 'ZONE' in 2023. Her vocal range is considered among the finest in the industry."},
+  {name:"Mina",full:"Myoui Mina",born:"Mar 24, 1997",origin:"San Antonio, USA / raised in Japan",role:"Sub Vocalist · Lead Dancer",sym:"Penguin",ig:"https://instagram.com/mina_sr_my/",igh:"@mina_sr_my",c:"#185FA5",desc:"Ballet-trained and beguilingly graceful — Mina moves through performance with a quiet intensity that leaves audiences transfixed.",fact:"Scouted by JYP while watching a musical — she had zero idol training, coming purely from classical ballet. Nicknamed 'Black Swan' by fans for her ethereal stage presence. She has spoken openly about her anxiety, inspiring many."},
+  {name:"Dahyun",full:"Kim Dahyun",born:"May 28, 1998",origin:"Seongnam, South Korea",role:"Lead Rapper · Sub Vocalist",sym:"Tofu",ig:"https://instagram.com/dahhyun/",igh:"@dahhyun",c:"#639922",desc:"Endlessly endearing and unexpectedly sharp — Dahyun's wit, warmth, and genuine fan connection make her one of TWICE's most beloved presences.",fact:"Went viral before debut for her 'eagle dance' at a school talent show — JYP scouts recruited her on the spot. Her fair complexion earned her the nickname 'Tofu.' Famous for her perfectly timed humor and warm fan interactions."},
+  {name:"Chaeyoung",full:"Son Chaeyoung",born:"Apr 23, 1999",origin:"Seoul, South Korea",role:"Main Rapper · Sub Vocalist",sym:"Strawberry",ig:"https://instagram.com/ros_aceae/",igh:"@ros_aceae",c:"#A32D2D",desc:"The quiet disruptor — Chaeyoung's introspective artistry and fearless self-expression push TWICE into unexpected, exciting territory.",fact:"A self-taught visual artist whose illustrations and tattoo-inspired artwork have been widely admired. Her Instagram handle '@ros_aceae' is the scientific name for the rose family. She writes her own rap lyrics and contributed to TWICE's songwriting."},
+  {name:"Tzuyu",full:"Chou Tzuyu",born:"Jun 14, 1999",origin:"Tainan, Taiwan",role:"Sub Vocalist · Lead Dancer",sym:"Deer",ig:"https://instagram.com/tzuyu.chou/",igh:"@tzuyu.chou",c:"#0F6E56",desc:"Statuesque and quietly commanding — Tzuyu has grown from maknae to icon, carrying TWICE's global reach with effortless elegance.",fact:"Named to TC Candler's '100 Most Beautiful Faces' list multiple consecutive years, ranking #1 twice. As the youngest member (maknae), she has matured into one of the group's most poised and commanding performers. The first Taiwanese member of a major K-pop group to achieve global recognition."},
+];
+const MVS=[
+  {t:"CHEER UP",a:"PAGE TWO",y:2016,v:"420M+",u:"https://www.youtube.com/watch?v=c7rCyll5AeY"},
+  {t:"TT",a:"TWICEcoaster : LANE 1",y:2016,v:"400M+",u:"https://www.youtube.com/watch?v=ePpPVE-GGJw"},
+  {t:"What is Love?",a:"What is Love?",y:2018,v:"340M+",u:"https://www.youtube.com/watch?v=aX3JgR9MYh4"},
+  {t:"Like OOH-AHH",a:"THE STORY BEGINS",y:2015,v:"250M+",u:"https://www.youtube.com/watch?v=sQGFHop-ORs"},
+  {t:"SIGNAL",a:"SIGNAL",y:2017,v:"220M+",u:"https://www.youtube.com/watch?v=c5HEfst4cBE"},
+  {t:"FANCY",a:"FANCY YOU",y:2019,v:"200M+",u:"https://www.youtube.com/watch?v=kOHB85vDuow"},
+  {t:"Feel Special",a:"Feel Special",y:2019,v:"170M+",u:"https://www.youtube.com/watch?v=3ymwOvzhwHs"},
+  {t:"I CAN'T STOP ME",a:"#TWICE4",y:2020,v:"145M+",u:"https://www.youtube.com/watch?v=beLRGMRkwZg"},
+  {t:"ALCOHOL-FREE",a:"Taste of Love",y:2021,v:"120M+",u:"https://www.youtube.com/watch?v=jvevGQeIcBo"},
+  {t:"TALK THAT TALK",a:"BETWEEN 1&2",y:2022,v:"105M+",u:"https://www.youtube.com/watch?v=gkMbQeAYFEg"},
+];
+
+let pi=0,fi=0;
+
+document.getElementById('srow').innerHTML=SOCIAL.map(s=>`<a href="${s.u}" target="_blank" class="schip">${s.n} <span class="shandle">${s.h}</span></a>`).join('');
+
+const slide=document.getElementById('slide');
+const dotsEl=document.getElementById('dots');
+slide.src=PHOTOS[0];
+slide.onerror=()=>{slide.style.opacity='.15'};
+dotsEl.innerHTML=PHOTOS.map((_,i)=>`<button class="dot ${i===0?'on':''}" onclick="setP(${i})"></button>`).join('');
+setInterval(()=>setP((pi+1)%PHOTOS.length),5000);
+function setP(i){pi=i;slide.style.opacity='0';setTimeout(()=>{slide.src=PHOTOS[i];slide.style.opacity='1'},250);document.querySelectorAll('.dot').forEach((d,j)=>d.classList.toggle('on',j===i));}
+
+function setF(i){fi=i;document.getElementById('ftxt').textContent=FACTS[i];document.getElementById('fcnt').textContent=`${i+1} / ${FACTS.length}`;}
+setF(0);setInterval(()=>setF((fi+1)%FACTS.length),7000);
+
+const mg=document.getElementById('mgrid');
+mg.innerHTML=MEMBERS.map((m,i)=>`<div class="mcard" style="--cc:${m.c}" onclick="showM(${i})"><div class="mnum">0${i+1}</div><div class="mname">${m.name}</div><div class="mfull">${m.full}</div><div class="mrole">${m.role}</div><span class="msym">${m.sym}</span><p class="mdesc">${m.desc}</p><a href="${m.ig}" target="_blank" class="mig" onclick="event.stopPropagation()">${m.igh}</a></div>`).join('');
+
+const md=document.getElementById('mdetail');
+function showM(i){
+  const m=MEMBERS[i];
+  mg.style.display='none';
+  md.style.display='block';
+  md.innerHTML=`<div class="dh"><div><div class="dnum">0${i+1} of 09</div><div class="dname" style="border-left:3px solid ${m.c}">${m.name}</div><div class="dfull">${m.full}</div><div class="drole" style="color:${m.c}">${m.role}</div></div><button class="backbtn" onclick="backG()">← All Members</button></div><div class="dgrid"><div><div class="dlabel">Born</div><div class="dval">${m.born}</div></div><div><div class="dlabel">Origin</div><div class="dval">${m.origin}</div></div><div><div class="dlabel">Symbol</div><div class="dval">${m.sym}</div></div><div><div class="dlabel">Instagram</div><a href="${m.ig}" target="_blank" class="mig">${m.igh}</a></div></div><div style="margin-bottom:28px"><div class="dlabel">Profile</div><p style="font-size:13px;line-height:1.75;color:var(--color-text-secondary);margin-top:8px">${m.desc}</p></div><div class="dfactbox" style="border-left-color:${m.c}"><div class="dlabel">Did You Know</div><p style="font-size:13px;line-height:1.75;color:var(--color-text-secondary);margin-top:8px">${m.fact}</p></div><a href="${m.ig}" target="_blank" class="digbtn" style="border-color:${m.c};color:${m.c}">Follow on Instagram · ${m.igh}</a>`;
+}
+function backG(){mg.style.display='grid';md.style.display='none';}
+
+document.getElementById('mvlist').innerHTML=MVS.map(m=>`<a href="${m.u}" target="_blank" class="mvi"><div><div class="mvt">${m.t}</div><div class="mvm">${m.a} · ${m.y}</div></div><div class="mvr"><span class="mvv">${m.v}</span><span class="mvarr">→</span></div></a>`).join('');
+
+async function fetchNews(){
+  const w=document.getElementById('news-wrap');
+  w.innerHTML='<div class="nload">Searching for latest news...</div>';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:'Search for the most recent TWICE K-pop news and updates from 2026. Return a JSON array of exactly 4 news items: [{"title":"...","summary":"2-sentence max","date":"...","category":"Music|Tour|Members|Awards|General"}]. Return ONLY the JSON array, no markdown, no preamble.'}]})});
+    const d=await res.json();
+    const txt=d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const m=txt.match(/\[[\s\S]*?\]/);
+    if(m){
+      const items=JSON.parse(m[0]);
+      w.innerHTML=`<div class="ngrid">${items.map(n=>`<div class="ncard"><div class="ncat">${n.category}</div><div class="ntitle">${n.title}</div><p class="nsumm">${n.summary}</p><div class="ndate">${n.date}</div></div>`).join('')}</div>`;
+    }else throw 0;
+  }catch(e){w.innerHTML='<div class="nload" style="font-size:13px;font-style:normal">Could not retrieve live news at this moment. Try refreshing.</div>';}
+}
+fetchNews();
+</script>
