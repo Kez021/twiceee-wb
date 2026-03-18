@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kez Media</title>
+
+<!-- PWA manifest -->
+<!-- <link rel="manifest" href="/manifest.json"> -->
+
+<!-- Theme color (browser chrome on Android) -->
+<meta name="theme-color" content="#e2688a">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- iOS / Safari PWA meta tags -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kez Media">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
+
+<!-- Standard icon for browsers -->
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ── SPLASH / LOADING SCREEN ─────────────────────── -->
+<div id="splashScreen">
+  <div class="splash-logo">Kez Media</div>
+  <div class="splash-tagline">Your photos. Your story. Your space.</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<div id="authOverlay">
+  <div class="ac">
+    <div class="ac-brand">Kez Media</div>
+    <div class="ac-sub">Your photos. Your story. Your space.</div>
+    <div class="ac-tabs">
+      <button class="ac-tab on" id="t-in" onclick="authTab('in')">Sign In</button>
+      <button class="ac-tab" id="t-up" onclick="authTab('up')">Create Account</button>
+    </div>
+    <div class="ac-err" id="authErr"></div>
+    <input class="ac-inp" id="aEmail" type="email" placeholder="Email address" autocomplete="email">
+    <input class="ac-inp" id="aPass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
+    <input class="ac-inp" id="aName" type="text" placeholder="Your name" style="display:none" onkeydown="if(event.key==='Enter')authSubmit()">
+    <button class="ac-btn" id="aBtn" onclick="authSubmit()">Sign In</button>
+    <div class="ac-or">or</div>
+    <button class="ac-google" onclick="authGoogle()">
+      <svg width="17" height="17" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<!-- ── NAV ─────────────────────────────────────────── -->
+<nav>
+  <div class="brand" onclick="goTo('home')">Kez Media</div>
+  <div class="nav-search">
+    <span class="si"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input type="text" placeholder="Search users, posts, tags..." id="navSearchInput" oninput="searchAll(this.value)" onblur="setTimeout(()=>closeSearch(),200)" onfocus="if(this.value)searchAll(this.value)">
+    <div class="search-dropdown" id="searchDropdown"></div>
+  </div>
+  <div class="nav-right">
+    <button class="icon-btn mob-notif-btn" onclick="goTo('notifs');updateMobNav('notifs')" title="Notifications" style="display:none;position:relative;">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="badge" id="mobTopNotifBadge" style="display:none">0</span>
+    </button>
+    <button class="icon-btn" onclick="openModal()" title="New post">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    </button>
+    <button class="icon-btn" title="Notifications" onclick="goTo('notifs')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="badge" id="notifBadge">3</span>
+    </button>
+    <button class="icon-btn" title="Messages" onclick="goTo('messages')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="badge" id="msgBadge">2</span>
+    </button>
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+      <span id="themeIcon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
+    </button>
+    <div class="nav-avatar" id="navAvatar" onclick="goTo('profile')" title="My Profile">Y</div>
+  </div>
+</nav>
+
+<!-- ── LAYOUT ───────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar-left">
+    <div class="menu-item active" id="mn-home" onclick="goTo('home')">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </div>
+    <div class="menu-item" id="mn-explore" onclick="goTo('explore')">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Explore
+    </div>
+    <div class="menu-item" id="mn-search" onclick="goTo('search')">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Find People
+    </div>
+    <div class="menu-item" onclick="openModal()">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Create Post
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-item" id="mn-notifs" onclick="goTo('notifs')">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+      <span class="menu-badge" id="mnNotifBadge">3</span>
+    </div>
+    <div class="menu-item" id="mn-messages" onclick="goTo('messages')">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Messages
+      <span class="menu-badge" id="mnMsgBadge">2</span>
+    </div>
+    <div class="menu-item" id="mn-profile" onclick="goTo('profile')">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </div>
+    <div class="menu-item" id="mn-settings" onclick="goTo('settings')">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </div>
+    <div class="menu-item" id="mn-admin" onclick="goTo('admin')" style="display:none;">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2L3 7l9 5 9-5-9-5z"/><path d="M3 17l9 5 9-5"/><path d="M3 12l9 5 9-5"/></svg>
+      Admin Panel
+    </div>
+    <div class="menu-item" onclick="openFeedbackModal()">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+      Suggest / Report
+    </div>
+    <div style="height:1px;background:var(--border);margin:6px 0;"></div>
+    <div class="menu-item" onclick="doSignOut()" style="color:#e05577;">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign Out
+    </div>
+  </aside>
+
+  <!-- CENTER VIEWS -->
+  <main>
+
+    <!-- HOME VIEW -->
+    <div class="view active" id="view-home">
+      <div class="stories-wrap">
+        <div class="stories-row" id="storiesRow">
+          <div class="story-item" onclick="openStoryModal()">
+            <div class="story-ring add-ring">
+              <div class="story-avatar" style="background:var(--pink-pale);color:var(--pink)">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+            </div>
+            <div class="story-name">Your story</div>
+          </div>
+        </div>
+      </div>
+      <div class="create-bar">
+        <div class="nav-avatar" id="createAvatar" style="width:36px;height:36px;font-size:13px;">Y</div>
+        <input class="create-input" type="text" placeholder="Share something beautiful..." onclick="openModal()" readonly>
+        <button class="photo-btn" onclick="openModal()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Photo
+        </button>
+      </div>
+      <div id="orphanBanner" role="alert"></div>
+      <div id="feed"></div>
+    </div>
+
+    <!-- EXPLORE VIEW -->
+    <div class="view" id="view-explore">
+      <div class="page-header">
+        <div class="page-title">Explore</div>
+        <div class="page-sub">Discover posts from everyone on Kez Media</div>
+      </div>
+      <div id="exploreFeed"></div>
+    </div>
+
+    <!-- OTHER USER PROFILE VIEW -->
+    <div class="view" id="view-other-profile">
+      <div id="otherProfileContent"></div>
+    </div>
+
+    <!-- SEARCH VIEW -->
+    <div class="view" id="view-search">
+      <div class="page-header">
+        <div class="page-title">Search</div>
+        <div class="page-sub">Find users, posts, and hashtags</div>
+      </div>
+      <div class="search-type-tabs">
+        <button class="search-type-tab on" id="stab-users" onclick="setSearchTab('users')">👤 Users</button>
+        <button class="search-type-tab" id="stab-posts" onclick="setSearchTab('posts')">📸 Posts</button>
+        <button class="search-type-tab" id="stab-tags" onclick="setSearchTab('tags')"># Tags</button>
+      </div>
+      <div class="search-page-bar">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchPageInput" placeholder="Search users, posts, #tags..." oninput="searchPageAll(this.value)">
+      </div>
+      <div id="searchPageResults"></div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div class="view" id="view-admin">
+      <div class="page-header">
+        <div class="page-title">👑 Admin Panel</div>
+        <div class="page-sub">Full control of Kez Media</div>
+      </div>
+      <div id="adminDashboard"></div>
+    </div>
+
+    <!-- NOTIFICATIONS VIEW -->
+    <div class="view" id="view-notifs">
+      <div class="page-header">
+        <div class="page-title">Notifications</div>
+        <div class="page-sub">Your activity and updates</div>
+      </div>
+      <div class="notif-actions">
+        <span class="unread-count" id="unreadCount">3 unread</span>
+        <button class="mark-read-btn" onclick="markAllRead()">Mark all as read</button>
+      </div>
+      <div id="notifList"></div>
+    </div>
+
+    <!-- MESSAGES VIEW -->
+    <div class="view" id="view-messages">
+      <div class="msg-layout">
+        <div class="msg-sidebar" id="msgSidebar">
+          <div class="msg-sidebar-head">
+            <div class="msg-sidebar-title">💬 Messages</div>
+            <input class="msg-search" type="text" placeholder="Search conversations..." oninput="filterConvos(this.value)">
+          </div>
+          <div class="msg-list" id="convoList"></div>
+        </div>
+        <div class="chat-area" id="chatArea">
+          <div class="chat-empty">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <p style="font-size:14px;font-weight:500;margin-top:10px;">Select a conversation</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE VIEW -->
+    <div class="view" id="view-profile">
+      <div class="profile-card">
+        <input type="file" id="bannerUpload" accept="image/*" style="display:none;" onchange="uploadBanner(this)">
+        <div class="profile-banner" id="profileBanner">
+          <img class="banner-img" id="bannerImg" alt="cover">
+          <div class="profile-banner-btns">
+            <label for="bannerUpload" class="profile-banner-edit" style="cursor:pointer;" onclick="event.preventDefault();document.getElementById('bannerUpload').click();">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Upload Cover
+            </label>
+            <button class="profile-banner-edit" onclick="toggleBannerColorPicker(event)">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit Color
+            </button>
+            <!-- Inline banner color picker popup -->
+            <div id="bannerColorPicker" style="display:none;position:absolute;bottom:46px;right:0;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);z-index:50;min-width:200px;">
+              <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Banner Color</div>
+              <div id="inlineBannerSwatches" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-top">
+          <div class="profile-av-wrap">
+            <div class="profile-av" id="profileAv" onclick="document.getElementById('avatarUpload').click()">
+              <span id="profileAvInitial">Y</span>
+              <div class="profile-av-overlay">
+                <svg width="22" height="22" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+              <input type="file" id="avatarUpload" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+            </div>
+            <div class="profile-actions">
+              <button class="edit-profile-btn" onclick="openProfileEditModal()">Edit Profile</button>
+              <button class="share-profile-btn" onclick="toast('Profile link copied!')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="admin-badge">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Admin
+          </div>
+          <div class="profile-name" id="profileName">Your Name</div>
+          <div class="profile-handle" id="profileHandle">@you</div>
+          <div class="profile-bio" id="profileBio">✨ Welcome to my Kez Media profile!</div>
+          <div class="profile-stats">
+            <div class="stat-item" onclick="showFollowModal('posts')">
+              <div class="stat-num" id="statPosts">0</div>
+              <div class="stat-label">Posts</div>
+            </div>
+            <div class="stat-item" onclick="showFollowModal('followers')">
+              <div class="stat-num">1.2k</div>
+              <div class="stat-label">Followers</div>
+            </div>
+            <div class="stat-item" onclick="showFollowModal('following')">
+              <div class="stat-num">284</div>
+              <div class="stat-label">Following</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <!-- tabs + grid -->
+      <div class="profile-card" style="overflow:hidden;">
+        <div style="padding:14px 16px 0;display:flex;justify-content:center;">
+          <button class="btn btn-pink" style="font-size:13px;padding:10px 28px;gap:7px;border-radius:30px;" onclick="openModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Post
+          </button>
+        </div>
+        <div style="padding:0 16px;">
+          <div class="profile-tabs">
+            <div class="ptab active" onclick="switchTab(this,'grid')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="display:inline;margin-right:4px;vertical-align:middle;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Photos
+            </div>
+            <div class="ptab" onclick="switchTab(this,'status-tab')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="display:inline;margin-right:4px;vertical-align:middle;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Status
+            </div>
+            <div class="ptab" onclick="switchTab(this,'saved-tab')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="display:inline;margin-right:4px;vertical-align:middle;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              Saved
+            </div>
+          </div>
+        </div>
+        <div id="grid" class="post-grid"></div>
+        <div id="status-tab" style="display:none;padding:16px;"><div id="statusList"></div></div>
+        <div id="saved-tab" style="display:none;padding:16px;"><div class="post-grid" id="savedGrid"></div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="view" id="view-settings">
+      <div class="page-header">
+        <div class="page-title">Settings</div>
+        <div class="page-sub" id="settingsSubtitle">Manage your account and preferences</div>
+      </div>
+      <div class="settings-grid">
+        <div class="settings-nav">
+          <div class="settings-nav-item active" id="sn-profile" onclick="switchSettingsNav('profile')">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Edit Profile
+          </div>
+          <div class="settings-nav-item" id="sn-appearance" onclick="switchSettingsNav('appearance')">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+            Appearance
+          </div>
+          <div class="settings-nav-item" id="sn-notifset" onclick="switchSettingsNav('notifset')">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Notifications
+          </div>
+          <div class="settings-nav-item" id="sn-privacy" onclick="switchSettingsNav('privacy')">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Privacy
+          </div>
+          <div class="settings-nav-item" id="sn-admin" onclick="switchSettingsNav('admin')" style="display:none;">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Admin Panel
+          </div>
+        </div>
+
+        <div>
+          <!-- EDIT PROFILE -->
+          <div class="settings-section active" id="ss-profile">
+            <div class="settings-card">
+              <div class="settings-card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Edit Profile
+              </div>
+              <div class="edit-form">
+                <div class="form-group">
+                  <label class="form-label">Display Name</label>
+                  <input class="form-input" id="editName" type="text" placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Username</label>
+                  <input class="form-input" id="editHandle" type="text" placeholder="@username">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bio</label>
+                  <textarea class="form-input" id="editBio" placeholder="Tell everyone about yourself..."></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Profile Color</label>
+                  <div class="color-swatches" id="colorSwatches"></div>
+                </div>
+                <button class="btn btn-pink" style="align-self:flex-start;" onclick="saveProfile()">Save Changes</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- APPEARANCE -->
+          <div class="settings-section" id="ss-appearance">
+
+            <!-- Install App Card -->
+            <div class="settings-card" id="installAppCard">
+              <div class="settings-card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2v13m0 0l-4-4m4 4l4-4M2 17v2a2 2 0 002 2h16a2 2 0 002-2v-2"/></svg>
+                Install App
+              </div>
+              <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px;">
+                Add <strong>Kez Media</strong> to your home screen so it opens like a real app — fullscreen, no browser bar.
+              </div>
+
+              <!-- Already installed -->
+              <div id="installDone" style="display:none;">
+                <div style="background:var(--bg2);border-radius:12px;padding:12px;font-size:13px;color:var(--text2);text-align:center;">
+                  ✅ Kez Media is already installed on your device!
+                </div>
+              </div>
+
+              <!-- Android Chrome: one-tap install button (shown when prompt is ready) -->
+              <div id="installAndroid" style="display:none;margin-bottom:12px;">
+                <button class="btn btn-pink" style="width:100%;justify-content:center;gap:8px;" onclick="triggerInstall()">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2v13m0 0l-4-4m4 4l4-4M2 17v2a2 2 0 002 2h16a2 2 0 002-2v-2"/></svg>
+                  Install Kez Media
+                </button>
+              </div>
+
+              <!-- iPhone / iPad instructions — always visible on iOS -->
+              <div id="installIOS" style="display:none;">
+                <div style="background:var(--bg2);border-radius:12px;padding:14px;font-size:13px;color:var(--text2);line-height:2;">
+                  <div style="font-weight:700;color:var(--text);margin-bottom:6px;">📲 Install on iPhone / iPad</div>
+                  <div>1️⃣ Open this page in <strong>Safari</strong></div>
+                  <div>2️⃣ Tap the <strong>Share</strong> button
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:middle;margin:0 2px;"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                    at the bottom of the screen
+                  </div>
+                  <div>3️⃣ Scroll and tap <strong>"Add to Home Screen"</strong></div>
+                  <div>4️⃣ Tap <strong>Add</strong> — done! 🎉</div>
+                </div>
+              </div>
+
+              <!-- Android without prompt yet, or other browser -->
+              <div id="installDefault">
+                <div style="background:var(--bg2);border-radius:12px;padding:14px;font-size:13px;color:var(--text2);line-height:2;">
+                  <div style="font-weight:700;color:var(--text);margin-bottom:6px;">📲 Install on Android</div>
+                  <div>1️⃣ Open this page in <strong>Chrome</strong></div>
+                  <div>2️⃣ Tap the <strong>⋮ menu</strong> at the top right</div>
+                  <div>3️⃣ Tap <strong>"Add to Home screen"</strong></div>
+                  <div>4️⃣ Tap <strong>Add</strong> — done! 🎉</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+                Appearance
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Dark Mode</div>
+                  <div class="settings-row-sub">Switch between light and dark theme</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="darkToggle" onchange="toggleTheme()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <div class="settings-row-label">Banner Color</div>
+                  <div class="settings-row-sub">Choose your profile banner gradient</div>
+                </div>
+              </div>
+              <div class="color-swatches" id="bannerSwatches" style="padding-top:10px;"></div>
+            </div>
+
+            <!-- Profile Color Theme -->
+            <div class="settings-card">
+              <div class="settings-card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                Profile Color Theme
+              </div>
+              <div style="font-size:12.5px;color:var(--text3);margin-bottom:8px;">Choose your profile's accent color theme</div>
+              <div class="profile-theme-grid" id="profileThemeGrid"></div>
+            </div>
+
+            <!-- Profile Grid Layout -->
+            <div class="settings-card">
+              <div class="settings-card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Profile Grid Layout
+              </div>
+              <div style="font-size:12.5px;color:var(--text3);margin-bottom:8px;">How your posts are displayed on your profile</div>
+              <div class="profile-layout-grid">
+                <div class="profile-layout-btn on" id="layout-grid" onclick="setProfileLayout('grid')">
+                  ⊞ Grid<br><span style="font-weight:400;font-size:10.5px;">3 columns</span>
+                </div>
+                <div class="profile-layout-btn" id="layout-list" onclick="setProfileLayout('list')">
+                  ☰ List<br><span style="font-weight:400;font-size:10.5px;">Full width</span>
+                </div>
+                <div class="profile-layout-btn" id="layout-magazine" onclick="setProfileLayout('magazine')">
+                  ⊟ Magazine<br><span style="font-weight:400;font-size:10.5px;">2 col + hero</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- NOTIFICATIONS SETTINGS -->
+          <div class="settings-section" id="ss-notifset">
+            <div class="settings-card">
+              <div class="settings-card-title">Notification Preferences</div>
+              <div class="settings-row">
+                <div class="settings-row-info"><div class="settings-row-label">Likes</div><div class="settings-row-sub">When someone likes your post</div></div>
+                <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-info"><div class="settings-row-label">Comments</div><div class="settings-row-sub">When someone comments on your post</div></div>
+                <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-info"><div class="settings-row-label">New Followers</div><div class="settings-row-sub">When someone follows you</div></div>
+                <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-info"><div class="settings-row-label">Messages</div><div class="settings-row-sub">When you receive a new message</div></div>
+                <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- PRIVACY -->
+          <div class="settings-section" id="ss-privacy">
+            <div class="settings-card">
+              <div class="settings-card-title">Privacy & Security</div>
+              <div class="settings-row">
+                <div class="settings-row-info"><div class="settings-row-label">Private Account</div><div class="settings-row-sub">Only followers can see your posts</div></div>
+                <label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-info"><div class="settings-row-label">Show Activity Status</div><div class="settings-row-sub">Let others see when you're active</div></div>
+                <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-info"><div class="settings-row-label">Allow Messages from Everyone</div><div class="settings-row-sub">Receive DMs from non-followers</div></div>
+                <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </div>
+            </div>
+            <div class="settings-card">
+              <div class="settings-card-title" style="color:#e05577;">Danger Zone</div>
+              <div class="settings-row">
+                <div class="settings-row-info"><div class="settings-row-label">Clear All Posts</div><div class="settings-row-sub">Permanently delete all your posts</div></div>
+                <button class="danger-btn" onclick="clearAllPosts()">Clear</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ADMIN PANEL -->
+          <div class="settings-section" id="ss-admin">
+            <div class="settings-card">
+              <div class="settings-card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Admin Panel — Full Control
+              </div>
+              <div style="background:var(--pink-pale);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--text2);">
+                👑 You are the admin of <strong>Kez Media</strong>. Full control over users, posts, and content.
+              </div>
+              <!-- Analytics stats grid -->
+              <div class="admin-stat-grid">
+                <div class="admin-stat-card"><div class="admin-stat-num" id="adminTotalPosts">—</div><div class="admin-stat-label">Total Posts</div></div>
+                <div class="admin-stat-card"><div class="admin-stat-num" id="adminTotalUsers">—</div><div class="admin-stat-label">Total Users</div></div>
+                <div class="admin-stat-card"><div class="admin-stat-num" id="adminTotalLikes">—</div><div class="admin-stat-label">Total Likes</div></div>
+                <div class="admin-stat-card"><div class="admin-stat-num" id="adminTodayPosts">—</div><div class="admin-stat-label">Posts Today</div></div>
+              </div>
+              <!-- Activity chart -->
+              <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:8px;">📊 Posts Per Day (last 7 days)</div>
+              <div id="adminActivityChart" style="display:flex;gap:6px;align-items:flex-end;height:60px;"></div>
+            </div>
+
+            <!-- User Management (ban/suspend) -->
+            <div class="settings-card">
+              <div class="settings-card-title">👥 User Management</div>
+              <div style="font-size:12.5px;color:var(--text3);margin-bottom:10px;">Ban or suspend accounts. Banned users cannot log in.</div>
+              <div id="adminUserList"><div style="color:var(--text3);font-size:13px;">Loading users...</div></div>
+            </div>
+
+            <!-- Post Moderation Queue -->
+            <div class="settings-card">
+              <div class="settings-card-title">🚦 Post Moderation Queue</div>
+              <div style="font-size:12.5px;color:var(--text3);margin-bottom:10px;">Reported posts awaiting review.</div>
+              <div id="adminModerationList"><div style="color:var(--text3);font-size:13px;">Loading...</div></div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-card-title">📋 All Posts</div>
+              <div id="adminPostList"></div>
+            </div>
+            <!-- Reports & Suggestions inbox — admin only -->
+            <div class="settings-card" id="adminFeedbackCard">
+              <div class="settings-card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Reports &amp; Suggestions
+                <span id="fbUnreadBadge" style="background:var(--pink);color:white;border-radius:99px;font-size:10px;padding:1px 7px;margin-left:6px;display:none;"></span>
+              </div>
+              <div id="adminFeedbackList"><div style="color:var(--text3);font-size:13px;">Loading...</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- HASHTAG VIEW -->
+  <div class="view" id="view-hashtag">
+    <div class="page-header">
+      <button style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;padding:0 8px 0 0;" onclick="goTo('home')">←</button>
+      <div>
+        <div class="page-title" id="hashtagTitle">#tag</div>
+        <div class="page-sub" id="hashtagCount">Loading...</div>
+      </div>
+    </div>
+    <div id="hashtagFeed"></div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="sidebar-right">
+    <div class="s-card">
+      <div class="s-title">Your Profile</div>
+      <div class="sug-user">
+        <div class="sug-avatar" id="sidebarProfileAv" style="background:linear-gradient(135deg,var(--pink),var(--pink-soft));color:white;font-size:14px;font-weight:700;">Y</div>
+        <div class="sug-info">
+          <div class="sug-name" id="sidebarName">You</div>
+          <div class="sug-sub">Your posts reach everyone</div>
+        </div>
+      </div>
+    </div>
+    <div class="s-card">
+      <div class="s-title">Suggested for you</div>
+      <div id="sugList"></div>
+    </div>
+    <div class="s-card">
+      <div class="s-title">Trending</div>
+      <div id="trendTags"></div>
+    </div>
+  
+    <div class="friends-sidebar-section">
+      <div class="friends-sidebar-title">Following</div>
+      <div id="sidebarFriends"><div style="font-size:12px;color:var(--text3);">Loading...</div></div>
+    </div>
+  </aside>
+</div>
+
+<!-- POST MODAL -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-head">
+      <div class="modal-title">New Post</div>
+      <button class="modal-x" onclick="closeModal()"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <!-- Post type tabs -->
+    <div class="post-type-tabs">
+      <button class="ptt active" id="ptt-status" onclick="switchPostType('status')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Status
+      </button>
+      <button class="ptt" id="ptt-photo" onclick="switchPostType('photo')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Photo
+      </button>
+    </div>
+    <!-- STATUS panel -->
+    <div id="statusPanel">
+      <div class="status-input-wrap">
+        <textarea class="status-textarea" id="statusInput" placeholder="What's on your mind?" maxlength="280" oninput="updateStatusChar()"></textarea>
+        <span class="status-char" id="statusChar">280</span>
+      </div>
+      <div class="mood-row" id="moodRow">
+        <span class="mood-chip" onclick="toggleMood(this,'😊 Feeling happy')">😊 Happy</span>
+        <span class="mood-chip" onclick="toggleMood(this,'✨ Feeling excited')">✨ Excited</span>
+        <span class="mood-chip" onclick="toggleMood(this,'💭 Thinking...')">💭 Thinking</span>
+        <span class="mood-chip" onclick="toggleMood(this,'🌿 Feeling calm')">🌿 Calm</span>
+        <span class="mood-chip" onclick="toggleMood(this,'🎉 Celebrating!')">🎉 Celebrating</span>
+        <span class="mood-chip" onclick="toggleMood(this,'💪 Motivated')">💪 Motivated</span>
+      </div>
+    </div>
+    <!-- PHOTO panel -->
+    <div id="photoPanel" style="display:none;">
+      <div class="upload-zone" id="uploadZone" ondragover="handleDrag(event,'over')" ondragleave="handleDrag(event,'leave')" ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this)">
+        <div id="uploadPrompt">
+          <div class="upload-icon-wrap"><svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <div class="upload-label">Drop photos here or <span onclick="document.getElementById('fileInput').click()">browse</span></div>
+          <div class="upload-hint">Select multiple photos · JPG · PNG · GIF · WEBP</div>
+        </div>
+      </div>
+      <div class="upload-previews" id="uploadPreviews"></div>
+      <textarea id="captionInput" placeholder="Write a caption..." maxlength="500" style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 15px;color:var(--text);font-family:'Jost',sans-serif;font-size:13.5px;resize:none;outline:none;transition:border-color .2s,background .3s;margin-bottom:0;min-height:75px;"></textarea>
+    </div>
+    <div class="modal-foot" style="margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-pink" onclick="submitPost()">Share Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLLOW MODAL -->
+<div class="overlay" id="followOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-head">
+      <div class="modal-title" id="followModalTitle">Followers</div>
+      <button class="modal-x" onclick="document.getElementById('followOverlay').classList.remove('open')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="follow-list" id="followList"></div>
+  </div>
+</div>
+
+<!-- POST LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <div class="lightbox-inner" id="lightboxInner"></div>
+</div>
+
+<!-- IMG EXPAND -->
+<div class="img-exp" id="imgExp" onclick="this.classList.remove('open')"><img id="imgExpSrc" src="" alt=""></div>
+
+<!-- USER PROFILE MODAL -->
+<div class="user-profile-overlay" id="userProfileOverlay" onclick="if(event.target===this)closeUserProfile()">
+  <div class="user-profile-modal" id="userProfileModal">
+    <div id="userProfileContent"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl"></div>
+
+
+<!-- ── STORY VIEWER ──────────────────────────────── -->
+<div id="storyViewer">
+  <div class="sv-progress-bar" id="svProgressBar"></div>
+  <div class="sv-header">
+    <div class="sv-av" id="svAv"></div>
+    <div>
+      <div class="sv-name" id="svName"></div>
+      <div class="sv-time" id="svTime"></div>
+    </div>
+    <button class="sv-close" onclick="closeStoryViewer()">×</button>
+  </div>
+  <div class="sv-media" id="svMedia">
+    <div class="sv-tap-prev" onclick="storyNav(-1)"></div>
+    <div class="sv-tap-next" onclick="storyNav(1)"></div>
+  </div>
+  <div class="sv-caption" id="svCaption" style="display:none;"></div>
+</div>
+
+<!-- ── STORY ARCHIVE ──────────────────────────────── -->
+<div id="storyArchive" onclick="if(event.target===this)closeStoryArchive()">
+  <div class="sa-sheet">
+    <div class="sa-handle"></div>
+    <div class="sa-title">📚 Your Past Stories</div>
+    <div class="sa-grid" id="archiveGrid"></div>
+  </div>
+</div>
+
+<!-- ── STORY UPLOAD MODAL ─────────────────────────── -->
+<div id="storyModal" onclick="if(event.target===this)closeStoryModal()">
+  <div class="sm-box">
+    <div class="sm-handle"></div>
+    <div class="sm-title">📸 Add to Your Story</div>
+    <div class="sm-options">
+      <div class="sm-opt-btn on" id="smOptPhoto" onclick="setStoryType('photo')">📷 Photo</div>
+      <div class="sm-opt-btn" id="smOptText" onclick="setStoryType('text')">✍️ Text</div>
+    </div>
+    <div class="sm-preview" id="smPreview">
+      <span style="color:var(--text3);font-size:13px;">Tap to select photo</span>
+    </div>
+    <input type="file" id="storyFileInput" accept="image/*,video/*" style="display:none;" onchange="handleStoryFile(this)">
+    <div id="smPhotoArea">
+      <button class="btn btn-pink" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="document.getElementById('storyFileInput').click()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Choose Photo / Video
+      </button>
+    </div>
+    <div id="smTextArea" style="display:none;">
+      <div class="sm-bg-colors" id="smBgColors"></div>
+      <textarea class="sm-text-input" id="smTextInput" placeholder="What's on your mind...?" oninput="updateTextStoryPreview()"></textarea>
+    </div>
+    <button class="btn btn-pink" style="width:100%;justify-content:center;" onclick="publishStory()" id="smPublishBtn">
+      Share to Story · Disappears in 24h
+    </button>
+    <button style="width:100%;text-align:center;padding:10px;color:var(--text3);font-size:13px;background:none;border:none;cursor:pointer;" onclick="openStoryArchive()">
+      📚 View Your Past Stories
+    </button>
+  </div>
+</div>
+
+<!-- ── POST EDIT MODAL ────────────────────────────── -->
+<div id="editPostModal" onclick="if(event.target===this)closeEditPost()">
+  <div class="epm-box">
+    <div class="epm-title">✏️ Edit Caption</div>
+    <textarea class="epm-textarea" id="epmText" placeholder="Write a caption..."></textarea>
+    <div class="epm-actions">
+      <button class="epm-cancel" onclick="closeEditPost()">Cancel</button>
+      <button class="epm-save" onclick="saveEditPost()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HASHTAG VIEW (injected into main) ─────────── -->
+
+<!-- FEEDBACK / SUGGEST / REPORT MODAL -->
+<div id="feedbackModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--card);border-radius:20px;padding:24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative;">
+    <button onclick="closeFeedbackModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">×</button>
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;">💡 Suggest or Report</div>
+    <div style="font-size:12.5px;color:var(--text2);margin-bottom:16px;">Your message goes directly to the admin. Share ideas, report bugs, or flag anything wrong.</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button id="fbTypeIdea" class="btn btn-pink" style="flex:1;font-size:12px;padding:7px;" onclick="setFbType('idea')">💡 Suggestion</button>
+      <button id="fbTypeBug" class="btn" style="flex:1;font-size:12px;padding:7px;border:1px solid var(--border);" onclick="setFbType('bug')">🐛 Bug Report</button>
+      <button id="fbTypeReport" class="btn" style="flex:1;font-size:12px;padding:7px;border:1px solid var(--border);" onclick="setFbType('report')">🚩 Report</button>
+    </div>
+    <textarea id="fbText" style="width:100%;min-height:110px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px;color:var(--text);font-family:Jost,sans-serif;font-size:13.5px;outline:none;resize:vertical;transition:border .2s;" placeholder="Describe your suggestion, bug, or report..."></textarea>
+    <button onclick="submitFeedback()" class="btn btn-pink" style="width:100%;justify-content:center;margin-top:12px;">Send to Admin</button>
+  </div>
+</div>
+
+<!-- INLINE EDIT PROFILE MODAL -->
+<div id="profileEditModal" onclick="if(event.target===this)closeProfileEditModal()" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--card);border-radius:22px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative;max-height:90vh;overflow-y:auto;">
+    <button onclick="closeProfileEditModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);">×</button>
+    <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;">✏️ Edit Profile</div>
+    <div style="font-size:12.5px;color:var(--text2);margin-bottom:18px;">Update your display info</div>
+    <div style="display:flex;flex-direction:column;gap:13px;">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Display Name</label>
+        <input id="peModalName" type="text" placeholder="Your full name" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-family:Jost,sans-serif;font-size:13.5px;outline:none;transition:border .2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Username</label>
+        <input id="peModalHandle" type="text" placeholder="@username" style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-family:Jost,sans-serif;font-size:13.5px;outline:none;transition:border .2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;">Bio</label>
+        <textarea id="peModalBio" placeholder="Tell everyone about yourself..." style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-family:Jost,sans-serif;font-size:13.5px;outline:none;resize:vertical;min-height:80px;transition:border .2s;" onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+    </div>
+    <button onclick="saveProfileEditModal()" class="btn btn-pink" style="width:100%;justify-content:center;margin-top:16px;">Save Changes</button>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav">
+  <div class="mob-nav-item active" id="mob-home" onclick="goTo('home');updateMobNav('home')">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Home</span>
+  </div>
+  <div class="mob-nav-item" id="mob-explore" onclick="goTo('explore');updateMobNav('explore')">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span>Explore</span>
+  </div>
+  <div class="mob-nav-item mob-nav-create" id="mob-create" onclick="openModal()">
+    <div class="mob-create-btn">
+      <svg fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+  </div>
+  <div class="mob-nav-item" id="mob-messages" onclick="goTo('messages');updateMobNav('messages')" style="position:relative;">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Chat</span>
+    <span class="mob-nav-badge" id="mobDmBadge" style="display:none">0</span>
+  </div>
+  <div class="mob-nav-item" id="mob-profile" onclick="goTo('profile');updateMobNav('profile')">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profile</span>
+  </div>
+</nav>
+
+<!-- REALTIME NOTIFICATION POPUP CONTAINER -->
+<div id="notifPopup"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
