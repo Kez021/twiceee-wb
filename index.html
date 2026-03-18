@@ -4,101 +4,287 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Kez Media</title>
+
+<!-- PWA / Meta -->
+<meta name="theme-color" content="#e2688a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<link rel="stylesheet" href="styles.css">
+
+<style>
+/* ─── TOKENS & THEMES ─── */
+:root {
+  --pink: #e2688a; --pink-soft: #f0a0b8; --pink-pale: #fceef3; --pink-glow: rgba(226,104,138,.18);
+  --bg: #ffffff; --bg2: #fdf6f8; --bg3: #f9edf2; --card: #ffffff;
+  --border: rgba(226,104,138,.16); --text: #1a0d12; --text2: #7a5263; --text3: #b8909e;
+  --nav-shadow: 0 1px 0 var(--border), 0 4px 18px rgba(226,104,138,.08);
+  --radius: 16px;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0508; --bg2: #140a10; --bg3: #1d0f17; --card: #12090e;
+  --text: #fff0f5; --text2: #eecad5; --text3: #8a5d6d;
+  --border: rgba(226, 104, 138, 0.25);
+  --pink-pale: rgba(226, 104, 138, 0.15);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Jost', sans-serif; background: var(--bg); color: var(--text); transition: background 0.3s; overflow-x: hidden; }
+
+/* ─── TOP NAVIGATION ─── */
+nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--card); z-index: 1000; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); }
+.brand { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; font-style: italic; color: var(--pink); cursor: pointer; }
+.nav-search { flex: 1; max-width: 280px; margin: 0 20px; position: relative; }
+.nav-search input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 8px 15px; color: var(--text); outline: none; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+.icon-btn { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); color: var(--text); cursor: pointer; position: relative; transition: 0.2s; }
+.icon-btn:hover { background: var(--pink-pale); border-color: var(--pink); color: var(--pink); }
+.badge { position: absolute; top: -4px; right: -4px; background: var(--pink); color: white; font-size: 9px; font-weight: 800; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--card); }
+
+.desktop-theme-btn { display: flex; }
+.mobile-top-notif { display: none; }
+
+/* ─── LAYOUT ─── */
+.layout { display: grid; grid-template-columns: 240px 1fr 300px; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 80px 16px 40px; }
+
+/* Sidebar Left */
+.sidebar-left { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 4px; }
+.menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: 500; color: var(--text2); }
+.menu-item:hover, .menu-item.active { background: var(--pink-pale); color: var(--pink); }
+.menu-badge { margin-left: auto; background: var(--pink); color: white; font-size: 10px; padding: 2px 7px; border-radius: 10px; }
+.menu-divider { height: 1px; background: var(--border); margin: 8px 0; }
+
+/* ─── STORIES (MOBILE FIX) ─── */
+.stories-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+.stories-row { display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none; align-items: flex-start; }
+.stories-row::-webkit-scrollbar { display: none; }
+.story-item { flex-shrink: 0; width: 68px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+.story-ring { padding: 3px; border-radius: 50%; background: linear-gradient(45deg, #f093fb, #e2688a); }
+.story-ring.add-ring { background: transparent; border: 2px dashed var(--pink); padding: 2px; }
+.story-ring.unseen { animation: ringRotate 3s linear infinite; }
+@keyframes ringRotate { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+.story-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--bg3); border: 2px solid var(--card); display: flex; align-items: center; justify-content: center; overflow: hidden; font-weight: bold; font-size: 20px; }
+.story-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.story-name { font-size: 10px; margin-top: 6px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; color: var(--text3); font-weight: 600; }
+
+/* ─── CREATE BAR ─── */
+.create-bar { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+.create-input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 25px; padding: 10px 18px; color: var(--text); outline: none; cursor: pointer; font-family: inherit; }
+
+/* ─── POSTS ─── */
+.post-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+.post-header { padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+.post-av { width: 38px; height: 38px; border-radius: 50%; background: var(--pink-soft); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; overflow: hidden; cursor: pointer; }
+.post-av img { width: 100%; height: 100%; object-fit: cover; }
+.post-info { flex: 1; }
+.post-user { font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.post-time { font-size: 11px; color: var(--text3); }
+
+.carousel-wrap { position: relative; background: #000; width: 100%; aspect-ratio: 1; display: flex; align-items: center; overflow: hidden; }
+.carousel-track { display: flex; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); width: 100%; height: 100%; }
+.carousel-slide { min-width: 100%; height: 100%; }
+.carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+
+.post-actions { padding: 10px 16px; display: flex; gap: 15px; }
+.action-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text); transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+.action-btn.liked { color: var(--pink); }
+.action-count { font-size: 13px; font-weight: 600; font-family: 'Jost'; }
+
+.post-caption { padding: 0 16px 12px; font-size: 14px; line-height: 1.5; }
+.post-caption b { margin-right: 6px; }
+
+/* ─── MENTIONS ─── */
+.mention-container { position: relative; }
+.mention-dropdown { position: absolute; bottom: 100%; left: 0; right: 0; background: var(--card); border: 1px solid var(--pink); border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 5000; display: none; box-shadow: 0 -4px 20px rgba(0,0,0,0.2); }
+.mention-dropdown.show { display: block; }
+.mention-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: 0.2s; }
+.mention-item:hover { background: var(--pink-pale); }
+.mention-av-small { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--pink-soft); }
+
+/* ─── PROFILE ─── */
+.profile-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+.profile-banner { height: 200px; background: var(--pink); position: relative; overflow: hidden; }
+.banner-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.profile-banner-btns { position: absolute; bottom: 12px; right: 12px; }
+.profile-banner-edit { background: rgba(0,0,0,0.6); color: white; padding: 7px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: 600; }
+.profile-av-wrap { display: flex; justify-content: space-between; align-items: flex-end; margin-top: -50px; padding: 0 20px; }
+.profile-main-av { width: 110px; height: 110px; border-radius: 50%; background: var(--pink-soft); border: 5px solid var(--card); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 36px; color: white; cursor: pointer; }
+.profile-main-av img { width: 100%; height: 100%; object-fit: cover; }
+.edit-profile-btn { border: 1.5px solid var(--pink); background: var(--card); color: var(--pink); padding: 9px 20px; border-radius: 25px; cursor: pointer; font-weight: 700; font-size: 13px; }
+
+.profile-info { padding: 15px 20px 20px; }
+.profile-name { font-size: 24px; font-weight: 900; margin: 0; }
+.profile-handle { color: var(--text3); font-size: 15px; margin-bottom: 12px; }
+.profile-bio { font-size: 14.5px; line-height: 1.6; }
+
+.post-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 2px; }
+.grid-item { aspect-ratio: 1; background: var(--bg3); cursor: pointer; overflow: hidden; }
+.grid-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+.grid-item:hover img { transform: scale(1.05); }
+
+/* ─── STORY VIEWER ─── */
+#storyViewer { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; flex-direction: column; }
+.sv-header { padding: 20px; display: flex; align-items: center; gap: 12px; color: white; z-index: 100; position: relative; }
+.sv-av { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; border: 2px solid white; }
+.sv-av img { width: 100%; height: 100%; object-fit: cover; }
+.sv-media { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; }
+.sv-media img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.sv-close { margin-left: auto; background: none; border: none; color: white; font-size: 32px; cursor: pointer; }
+
+.sv-viewers-btn { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.25); color: white; border: none; padding: 10px 24px; border-radius: 30px; backdrop-filter: blur(10px); cursor: pointer; z-index: 1000; font-weight: 600; }
+.sv-viewer-list { position: absolute; bottom: 0; left: 0; right: 0; background: var(--card); border-radius: 25px 25px 0 0; padding: 24px; transform: translateY(100%); transition: 0.4s cubic-bezier(0.22, 1, 0.36, 1); z-index: 4000; max-height: 60%; overflow-y: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.3); }
+.sv-viewer-list.open { transform: translateY(0); }
+.sv-progress-bar { position: absolute; top: 5px; left: 10px; right: 10px; height: 3px; display: flex; gap: 4px; z-index: 100; }
+.sv-progress-seg { flex: 1; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; }
+.sv-progress-fill { height: 100%; background: #fff; width: 0%; transition: width linear; }
+
+/* ─── MODALS ─── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.overlay.open { display: flex; }
+.modal { background: var(--card); border-radius: 24px; width: 100%; max-width: 500px; padding: 24px; animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-title { font-family: 'Playfair Display'; font-size: 20px; color: var(--pink); font-weight: 900; }
+
+.upload-zone { border: 2px dashed var(--border); border-radius: 16px; padding: 40px 20px; text-align: center; cursor: pointer; transition: 0.2s; margin-top: 15px; }
+.upload-zone:hover { border-color: var(--pink); background: var(--pink-pale); }
+.upload-previews { display: flex; gap: 8px; overflow-x: auto; margin-top: 15px; padding-bottom: 5px; }
+.upload-thumb { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; border: 2px solid var(--pink); }
+
+/* ─── MOBILE NAVIGATION ─── */
+.mobile-bottom-nav { display: none; }
+
+@media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; padding-top: 70px; padding-bottom: 80px; }
+    .sidebar-left, .sidebar-right, .nav-search, .desktop-theme-btn { display: none; }
+    .mobile-top-notif { display: flex; }
+    .mobile-bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: var(--card); border-top: 1px solid var(--border); justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+    .mob-nav-item { font-size: 24px; cursor: pointer; color: var(--text3); }
+    .mob-create-btn { width: 54px; height: 54px; background: var(--pink); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 30px; margin-top: -35px; box-shadow: 0 5px 15px rgba(226, 104, 138, 0.4); }
+    .post-card { border-radius: 0; border-left: none; border-right: none; }
+    .stories-wrap { border-radius: 0; border-left: none; border-right: none; }
+}
+
+/* ─── UTILS ─── */
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1a0d12; color: white; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; z-index: 10000; display: none; }
+.toast.show { display: block; animation: fadeInUp 0.3s ease; }
+@keyframes fadeInUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+</style>
 </head>
 <body>
 
-<div id="splashScreen">
-  <div class="splash-logo">Kez Media</div>
-  <div class="splash-dots"><div class="splash-dot"></div><div class="splash-dot"></div><div class="splash-dot"></div></div>
+<!-- SPLASH -->
+<div id="splashScreen" style="position:fixed; inset:0; background:white; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <h1 style="font-family:'Playfair Display'; color:#e2688a; font-size:48px; font-style:italic;">Kez Media</h1>
+    <p style="color:#b8909e; margin-top:10px;">Loading your space...</p>
 </div>
 
+<!-- AUTH -->
 <div id="authOverlay">
-  <div class="ac">
-    <div class="ac-brand">Kez Media</div>
-    <div class="ac-tabs">
-      <button class="ac-tab on" id="t-in" onclick="authTab('in')">Sign In</button>
-      <button class="ac-tab" id="t-up" onclick="authTab('up')">Join</button>
+  <div class="ac" style="background:white; padding:35px; border-radius:25px; width:360px; text-align:center; box-shadow: 0 15px 40px rgba(0,0,0,0.1);">
+    <h2 style="font-family:'Playfair Display'; color:#e2688a; margin-bottom:10px;">Welcome</h2>
+    <div style="display:flex; background:#f9edf2; border-radius:10px; padding:5px; margin-bottom:20px;">
+        <button id="t-in" class="ac-tab" style="flex:1; border:none; padding:10px; border-radius:8px; cursor:pointer;" onclick="authTab('in')">Login</button>
+        <button id="t-up" class="ac-tab" style="flex:1; border:none; padding:10px; border-radius:8px; cursor:pointer;" onclick="authTab('up')">Sign Up</button>
     </div>
-    <div class="ac-err" id="authErr"></div>
-    <input class="ac-inp" id="aEmail" type="email" placeholder="Email">
-    <input class="ac-inp" id="aPass" type="password" placeholder="Password">
-    <input class="ac-inp" id="aName" type="text" placeholder="Full Name" style="display:none">
-    <button class="ac-btn" onclick="authSubmit()">Continue</button>
-    <button class="ac-google" onclick="authGoogle()">Continue with Google</button>
+    <div id="authErr" style="color:#ef4444; font-size:12px; margin-bottom:10px;"></div>
+    <input id="aEmail" type="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #eee;">
+    <input id="aPass" type="password" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #eee;">
+    <input id="aName" type="text" placeholder="Full Name" style="display:none; width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #eee;">
+    <button onclick="authSubmit()" style="width:100%; padding:14px; border:none; border-radius:12px; background:#e2688a; color:white; font-weight:700; cursor:pointer;">Continue</button>
+    <div style="margin: 15px 0; color:#ccc;">or</div>
+    <button onclick="authGoogle()" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; background:white; cursor:pointer;">Google</button>
   </div>
 </div>
 
+<!-- TOP NAV -->
 <nav>
   <div class="brand" onclick="goTo('home')">Kez Media</div>
   <div class="nav-search">
     <input type="text" placeholder="Search people..." oninput="handleMentionInput(this, 'nav')">
-    <div class="mention-dropdown" id="mentionNav"></div>
+    <div id="mentionNav" class="mention-dropdown"></div>
   </div>
   <div class="nav-right">
     <button class="icon-btn mobile-top-notif" onclick="goTo('notifs')">🔔<span class="badge" id="notifBadge">0</span></button>
-    <button class="theme-btn desktop-top-theme" onclick="toggleTheme()"><span id="themeIcon">🌙</span></button>
-    <div class="nav-avatar" id="navAvatar" onclick="goTo('profile')">K</div>
+    <button class="icon-btn desktop-theme-btn" onclick="toggleTheme()" id="themeIconBtn">🌙</button>
+    <div class="post-av" style="width:34px; height:34px; font-size:12px;" onclick="goTo('profile')" id="navAvatar">K</div>
   </div>
 </nav>
 
 <div class="layout">
   <aside class="sidebar-left">
-    <div class="menu-item active" onclick="goTo('home')">🏠 Home</div>
+    <div class="menu-item active" id="mn-home" onclick="goTo('home')">🏠 Home</div>
     <div class="menu-item" onclick="goTo('explore')">🌍 Explore</div>
     <div class="menu-item" onclick="goTo('notifs')">🔔 Notifs <span class="menu-badge" id="mnNotifBadge">0</span></div>
+    <div class="menu-item" onclick="goTo('messages')">💬 Messages</div>
     <div class="menu-item" onclick="goTo('profile')">👤 Profile</div>
-    <div class="menu-item" onclick="toggleTheme()">🌓 Theme</div>
     <div class="menu-divider"></div>
+    <div class="menu-item" onclick="toggleTheme()">🌓 Dark Mode</div>
     <div class="menu-item" onclick="doSignOut()" style="color:#ef4444">🚪 Logout</div>
   </aside>
 
   <main>
+    <!-- HOME -->
     <div class="view active" id="view-home">
-      <div class="stories-wrap"><div class="stories-row" id="storiesRow">
+      <div class="stories-wrap">
+        <div class="stories-row" id="storiesRow">
           <div class="story-item" onclick="openStoryModal()">
             <div class="story-ring add-ring"><div class="story-avatar">+</div></div>
-            <div class="story-name">Add Story</div>
+            <div class="story-name">Your Story</div>
           </div>
-      </div></div>
+        </div>
+      </div>
       <div class="create-bar">
-        <div class="nav-avatar" id="createAvatar">K</div>
+        <div class="post-av" id="createAvatar" style="width:36px; height:36px;">K</div>
         <div style="flex:1; position:relative;">
-            <input class="create-input" type="text" placeholder="What's happening? @mention" oninput="handleMentionInput(this, 'main')">
+            <input class="create-input" type="text" placeholder="What's on your mind? (@mention)" oninput="handleMentionInput(this, 'main')">
             <div id="mentionMain" class="mention-dropdown"></div>
         </div>
       </div>
       <div id="feed"></div>
     </div>
 
+    <!-- PROFILE -->
     <div class="view" id="view-profile">
       <div class="profile-card">
         <div class="profile-banner" id="profileBanner">
           <img id="bannerImg" class="banner-img">
           <div class="profile-banner-btns">
-            <label class="profile-banner-edit" for="bannerInp">📸 Upload Cover</label>
+            <label class="profile-banner-edit" for="bannerInp">📸 Edit Cover</label>
             <input type="file" id="bannerInp" hidden onchange="uploadBanner(this)">
           </div>
         </div>
         <div class="profile-top">
           <div class="profile-av-wrap">
-            <div class="profile-av" id="profileAv" onclick="document.getElementById('avatarUpload').click()">
+            <div class="profile-main-av" id="profileAv" onclick="document.getElementById('avatarUpload').click()">
               <span id="profileAvInitial">K</span>
               <input type="file" id="avatarUpload" hidden onchange="uploadAvatar(this)">
             </div>
             <button class="edit-profile-btn" onclick="goTo('settings')">Edit Profile</button>
           </div>
-          <div class="profile-name" id="profileName">User</div>
+          <h2 class="profile-name" id="profileName">User</h2>
           <div class="profile-handle" id="profileHandle">@handle</div>
-          <div class="profile-bio" id="profileBio">✨ Welcome to my space!</div>
+          <div class="profile-bio" id="profileBio">✨ Welcome to my Kez Media space!</div>
         </div>
       </div>
       <div id="grid" class="post-grid"></div>
+    </div>
+
+    <!-- NOTIFS -->
+    <div class="view" id="view-notifs">
+      <div class="profile-card" style="padding:20px;">
+        <h2 style="font-family:'Playfair Display'; margin-bottom:15px;">Notifications</h2>
+        <div id="notifList"></div>
+      </div>
     </div>
   </main>
 </div>
@@ -106,34 +292,486 @@
 <!-- POST MODAL -->
 <div class="overlay" id="overlay">
   <div class="modal">
-    <div class="modal-head"><h3>New Post</h3><button onclick="closeModal()">×</button></div>
+    <div class="modal-head"><div class="modal-title">New Post</div><button style="background:none; border:none; font-size:24px; cursor:pointer;" onclick="closeModal()">×</button></div>
     <div style="position:relative;">
-        <textarea id="postInput" placeholder="Use @ to mention anyone..." oninput="handleMentionInput(this, 'modal')"></textarea>
+        <textarea id="postInput" style="width:100%; height:120px; border:1px solid var(--border); border-radius:15px; padding:15px; outline:none; font-family:inherit; background:var(--bg2); color:var(--text); resize:none;" placeholder="Caption with @mentions..." oninput="handleMentionInput(this, 'modal')"></textarea>
         <div id="mentionModal" class="mention-dropdown"></div>
     </div>
     <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
       <input type="file" id="fileInput" multiple hidden onchange="handleFiles(this)">
-      <p>📸 Tap to add photos</p>
+      <p style="color:var(--text2);">📸 Tap to add photos</p>
     </div>
     <div id="uploadPreviews" class="upload-previews"></div>
-    <button class="btn btn-pink" onclick="submitPost()">Post Now</button>
+    <button class="btn-pink" style="width:100%; padding:14px; border:none; border-radius:15px; background:var(--pink); color:white; font-weight:700; margin-top:15px; cursor:pointer;" onclick="submitPost()">Post Now</button>
   </div>
 </div>
 
 <!-- STORY VIEWER -->
 <div id="storyViewer">
+  <div class="sv-progress-bar" id="svProgressBar"></div>
   <div class="sv-header">
     <div class="sv-av" id="svAv"></div>
-    <div class="sv-name" id="svName"></div>
+    <div class="sv-name" id="svName" style="font-weight:700; font-size:14px;">User</div>
     <button class="sv-close" onclick="closeStoryViewer()">×</button>
   </div>
   <div class="sv-media" id="svMedia"></div>
+  <!-- Viewers Component -->
   <div id="svViewerList" class="sv-viewer-list"></div>
   <button id="svViewersBtn" class="sv-viewers-btn" style="display:none" onclick="toggleStoryViewers()">👁️ Viewers</button>
 </div>
 
+<!-- STORY MODAL -->
+<div id="storyModal" class="overlay">
+    <div class="modal">
+        <h3 class="modal-title">Share a Story</h3>
+        <p style="font-size:12px; color:var(--text3); margin-bottom:15px;">Disappears after 24 hours.</p>
+        <input type="file" id="storyFileInput" onchange="handleStoryFile(this)" style="margin-bottom:20px;">
+        <button class="btn-pink" style="width:100%; padding:12px; border:none; border-radius:12px; background:var(--pink); color:white; font-weight:700; cursor:pointer;" onclick="publishStory()">Upload Story</button>
+        <button style="width:100%; padding:10px; background:none; border:none; color:var(--text3); margin-top:10px; cursor:pointer;" onclick="closeStoryModal()">Cancel</button>
+    </div>
+</div>
+
 <div class="toast" id="toastEl"></div>
 
-<script src="app.js"></script>
+<!-- MOBILE BOTTOM -->
+<nav class="mobile-bottom-nav">
+  <div class="mob-nav-item" onclick="goTo('home')">🏠</div>
+  <div class="mob-nav-item" onclick="goTo('explore')">🌍</div>
+  <div class="mob-nav-item mob-nav-create" onclick="openModal()"><div class="mob-create-btn">+</div></div>
+  <div class="mob-nav-item" onclick="goTo('messages')">💬</div>
+  <div class="mob-nav-item" onclick="goTo('profile')">👤</div>
+</nav>
+
+<script>
+/* ─── JAVASCRIPT LOGIC ─── */
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCxDRIL9XOeA7d-yqXF84tndWPZY8JxLSY",
+    authDomain: "kezz-media.firebaseapp.com",
+    projectId: "kezz-media",
+    storageBucket: "kezz-media.firebasestorage.app",
+    messagingSenderId: "307892917050",
+    appId: "1:307892917050:web:5b318f4039affaa26b3603"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const storage = firebase.storage();
+
+let me = {};
+let allUsers = {};
+let posts = [];
+let uploadImages = [];
+let storyFile = null;
+
+/* ── AUTH ── */
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        const doc = await db.collection('profiles').doc(user.uid).get();
+        if (doc.exists) {
+            me = { uid: user.uid, ...doc.data() };
+            document.getElementById('authOverlay').style.display = 'none';
+            initApp();
+        } else {
+            // New user setup
+            const initialData = { name: user.displayName || 'New User', handle: user.uid.slice(0,6), initial: 'K', color: '#e2688a' };
+            await db.collection('profiles').doc(user.uid).set(initialData);
+            me = { uid: user.uid, ...initialData };
+            document.getElementById('authOverlay').style.display = 'none';
+            initApp();
+        }
+    } else {
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('splashScreen').style.display = 'none';
+    }
+});
+
+function authTab(m) {
+    document.getElementById('t-in').style.background = m==='in' ? 'white' : 'transparent';
+    document.getElementById('t-up').style.background = m==='up' ? 'white' : 'transparent';
+    document.getElementById('aName').style.display = m==='up' ? 'block' : 'none';
+}
+
+async function authSubmit() {
+    const email = document.getElementById('aEmail').value;
+    const pass = document.getElementById('aPass').value;
+    const name = document.getElementById('aName').value;
+    const isSignUp = document.getElementById('aName').style.display === 'block';
+
+    try {
+        if (isSignUp) {
+            const res = await auth.createUserWithEmailAndPassword(email, pass);
+            await res.user.updateProfile({ displayName: name });
+        } else {
+            await auth.signInWithEmailAndPassword(email, pass);
+        }
+    } catch (e) { document.getElementById('authErr').textContent = e.message; }
+}
+
+function doSignOut() { auth.signOut().then(() => location.reload()); }
+
+/* ── APP INIT ── */
+async function initApp() {
+    await watchUsers();
+    startPostsListener();
+    loadStories();
+    applyTheme();
+    updateUI();
+    document.getElementById('splashScreen').style.opacity = '0';
+    setTimeout(() => document.getElementById('splashScreen').style.display = 'none', 500);
+}
+
+/* ── MENTIONS ── */
+function handleMentionInput(inp, type) {
+    const val = inp.value;
+    const lastAt = val.lastIndexOf('@');
+    const dropdown = document.getElementById('mention' + type.charAt(0).toUpperCase() + type.slice(1));
+    
+    if (lastAt === -1 || (lastAt > 0 && val[lastAt-1] !== ' ')) { 
+        dropdown.classList.remove('show'); 
+        return; 
+    }
+
+    const query = val.slice(lastAt + 1).toLowerCase();
+    const matches = Object.values(allUsers).filter(u => 
+        (u.handle && u.handle.toLowerCase().includes(query)) || 
+        (u.name && u.name.toLowerCase().includes(query))
+    ).slice(0, 5);
+
+    if (matches.length > 0) {
+        dropdown.classList.add('show');
+        dropdown.innerHTML = '';
+        matches.forEach(u => {
+            const div = document.createElement('div');
+            div.className = 'mention-item';
+            const av = u.avatar ? `<img src="${u.avatar}" class="mention-av-small">` : `<div class="mention-av-small" style="background:${u.color || 'var(--pink)'}; display:flex; align-items:center; justify-content:center; color:white; font-size:10px;">${u.initial}</div>`;
+            div.innerHTML = `${av} <div><b>${u.name}</b><br><small>@${u.handle}</small></div>`;
+            div.onclick = () => {
+                const before = val.substring(0, lastAt);
+                inp.value = before + '@' + u.handle + ' ';
+                dropdown.classList.remove('show');
+                inp.focus();
+            };
+            dropdown.appendChild(div);
+        });
+    } else { dropdown.classList.remove('show'); }
+}
+
+/* ── UPLOADS ── */
+async function uploadBanner(inp) {
+    const file = inp.files[0];
+    if (!file) return;
+    toast('Updating cover photo... 🌸');
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            // Using Cloudinary upload pattern
+            const formData = new FormData();
+            formData.append('file', e.target.result);
+            formData.append('upload_preset', 'kezz_media');
+            const res = await fetch('https://api.cloudinary.com/v1_1/dyspuqa0s/image/upload', {method:'POST', body:formData});
+            const data = await res.json();
+            
+            await db.collection('profiles').doc(me.uid).update({ bannerImage: data.secure_url });
+            document.getElementById('bannerImg').src = data.secure_url;
+            document.getElementById('bannerImg').style.display = 'block';
+            document.getElementById('profileBanner').style.background = 'none';
+            toast('Cover photo updated! ✓');
+        } catch (err) { toast('Upload failed.'); }
+    };
+    reader.readAsDataURL(file);
+}
+
+async function uploadAvatar(inp) {
+    const file = inp.files[0];
+    if (!file) return;
+    toast('Uploading avatar...');
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const formData = new FormData();
+        formData.append('file', e.target.result);
+        formData.append('upload_preset', 'kezz_media');
+        const res = await fetch('https://api.cloudinary.com/v1_1/dyspuqa0s/image/upload', {method:'POST', body:formData});
+        const data = await res.json();
+        await db.collection('profiles').doc(me.uid).update({ avatar: data.secure_url });
+        location.reload();
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ── POSTING ── */
+function handleFiles(inp) {
+    const files = Array.from(inp.files);
+    files.forEach(f => {
+        const r = new FileReader();
+        r.onload = (e) => {
+            uploadImages.push(e.target.result);
+            renderPreviews();
+        };
+        r.readAsDataURL(f);
+    });
+}
+
+function renderPreviews() {
+    const p = document.getElementById('uploadPreviews');
+    p.innerHTML = '';
+    uploadImages.forEach(src => {
+        p.innerHTML += `<img src="${src}" class="upload-thumb">`;
+    });
+}
+
+async function submitPost() {
+    const text = document.getElementById('postInput').value.trim();
+    if (!text && uploadImages.length === 0) return toast('Write something first!');
+    
+    toast('Sharing your post... ✨');
+    let urls = [];
+    for(let img of uploadImages) {
+        const formData = new FormData();
+        formData.append('file', img);
+        formData.append('upload_preset', 'kezz_media');
+        const res = await fetch('https://api.cloudinary.com/v1_1/dyspuqa0s/image/upload', {method:'POST', body:formData});
+        const d = await res.json();
+        urls.push(d.secure_url);
+    }
+
+    await db.collection('posts').add({
+        uid: me.uid,
+        caption: text,
+        images: urls,
+        likes: 0,
+        likedBy: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    closeModal();
+    uploadImages = [];
+    document.getElementById('postInput').value = '';
+    toast('Shared to feed! ✓');
+}
+
+/* ── FEED LISTENER ── */
+function startPostsListener() {
+    db.collection('posts').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = '';
+        snap.forEach(doc => {
+            const p = doc.data();
+            feed.appendChild(buildPostCard(p, doc.id));
+        });
+    });
+}
+
+function buildPostCard(p, id) {
+    const user = allUsers[p.uid] || { name: 'User', initial: 'K', color: '#e2688a' };
+    const card = document.createElement('div');
+    card.className = 'post-card';
+    
+    let media = '';
+    if (p.images && p.images.length > 0) {
+        media = `<div class="carousel-wrap"><div class="carousel-track">` + 
+                p.images.map(img => `<div class="carousel-slide"><img src="${img}"></div>`).join('') +
+                `</div></div>`;
+    }
+
+    card.innerHTML = `
+        <div class="post-header">
+            <div class="post-av" style="background:${user.color}">${user.avatar ? `<img src="${user.avatar}">` : user.initial}</div>
+            <div class="post-info">
+                <div class="post-user">@${user.handle || 'user'}</div>
+                <div class="post-time">Just now</div>
+            </div>
+        </div>
+        ${media}
+        <div class="post-actions">
+            <button class="action-btn ${p.likedBy && p.likedBy.includes(me.uid) ? 'liked' : ''}" onclick="toggleLike('${id}')">❤️ <span class="action-count">${p.likes || 0}</span></button>
+            <button class="action-btn">💬</button>
+        </div>
+        <div class="post-caption"><b>@${user.handle}</b> ${linkify(p.caption)}</div>
+    `;
+    return card;
+}
+
+function linkify(text) {
+    if(!text) return '';
+    return text.replace(/@(\w+)/g, '<span style="color:var(--pink); font-weight:700;">@$1</span>');
+}
+
+async function toggleLike(pid) {
+    const ref = db.collection('posts').doc(pid);
+    const doc = await ref.get();
+    const data = doc.data();
+    const liked = data.likedBy && data.likedBy.includes(me.uid);
+
+    if (liked) {
+        await ref.update({
+            likes: firebase.firestore.FieldValue.increment(-1),
+            likedBy: firebase.firestore.FieldValue.arrayRemove(me.uid)
+        });
+    } else {
+        await ref.update({
+            likes: firebase.firestore.FieldValue.increment(1),
+            likedBy: firebase.firestore.FieldValue.arrayUnion(me.uid)
+        });
+    }
+}
+
+/* ── STORIES & VIEWERS ── */
+async function loadStories() {
+    const row = document.getElementById('storiesRow');
+    
+    // 1. DUMMY OFFICIAL STORY
+    const dummy = document.createElement('div');
+    dummy.className = 'story-item';
+    dummy.innerHTML = `<div class="story-ring unseen"><div class="story-avatar" style="background:var(--pink); color:white;">K</div></div><div class="story-name">Kez Official</div>`;
+    dummy.onclick = () => openStoryViewer([{
+        uid: 'system', userName: 'Kez Official', type: 'text', text: 'Welcome to Kez Media! 🌸 Enjoy the deep dark mode.', bgColor: 'var(--pink)', seenBy: []
+    }], 0);
+    row.appendChild(dummy);
+
+    // 2. REAL STORIES
+    const snap = await db.collection('stories').where('expiresAt', '>', new Date().toISOString()).get();
+    snap.forEach(doc => {
+        const s = { id: doc.id, ...doc.data() };
+        const u = allUsers[s.uid] || {};
+        const d = document.createElement('div');
+        d.className = 'story-item';
+        d.innerHTML = `<div class="story-ring"><div class="story-avatar"><img src="${u.avatar || ''}"></div></div><div class="story-name">${u.name}</div>`;
+        d.onclick = () => openStoryViewer([s], 0, s.id);
+        row.appendChild(d);
+    });
+}
+
+function openStoryViewer(stories, idx, storyId) {
+    const s = stories[idx];
+    const viewer = document.getElementById('storyViewer');
+    viewer.style.display = 'flex';
+    document.getElementById('svName').textContent = s.userName;
+    document.getElementById('svMedia').innerHTML = s.type === 'text' 
+        ? `<div style="background:${s.bgColor}; width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; text-align:center; padding:30px;">${s.text}</div>`
+        : `<img src="${s.mediaUrl}" style="width:100%; height:100%; object-fit:contain">`;
+
+    // Tracking
+    if (s.uid !== me.uid && storyId && s.uid !== 'system') {
+        db.collection('stories').doc(storyId).update({ seenBy: firebase.firestore.FieldValue.arrayUnion(me.uid) });
+    }
+
+    // Viewers List
+    const btn = document.getElementById('svViewersBtn');
+    if (s.uid === me.uid) {
+        btn.style.display = 'block';
+        updateViewerList(s.seenBy || []);
+    } else { btn.style.display = 'none'; }
+}
+
+function updateViewerList(uids) {
+    const list = document.getElementById('svViewerList');
+    list.innerHTML = '<h4 style="margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">Story Viewers</h4>';
+    if(uids.length === 0) list.innerHTML += '<p style="color:var(--text3); font-size:12px;">No one has viewed yet 👀</p>';
+    uids.forEach(uid => {
+        const user = allUsers[uid];
+        if (user) {
+            list.innerHTML += `<div class="mention-item"><img src="${user.avatar || ''}" class="mention-av-small"> <span><b>${user.name}</b> (@${user.handle})</span></div>`;
+        }
+    });
+}
+
+function toggleStoryViewers() { document.getElementById('svViewerList').classList.toggle('open'); }
+function closeStoryViewer() { document.getElementById('storyViewer').style.display = 'none'; document.getElementById('svViewerList').classList.remove('open'); }
+
+/* ── UI UTILS ── */
+function goTo(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    const menuIcon = document.getElementById('mn-' + view);
+    if(menuIcon) menuIcon.classList.add('active');
+    window.scrollTo(0,0);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const target = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', target);
+    localStorage.setItem('theme', target);
+    document.getElementById('themeIconBtn').textContent = target === 'light' ? '🌙' : '☀️';
+}
+
+function applyTheme() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeIconBtn').textContent = saved === 'light' ? '🌙' : '☀️';
+}
+
+function updateUI() {
+    document.getElementById('profileName').textContent = me.name || 'User';
+    document.getElementById('profileHandle').textContent = '@' + (me.handle || 'user');
+    document.getElementById('navAvatar').textContent = me.initial || 'K';
+    document.getElementById('createAvatar').textContent = me.initial || 'K';
+    document.getElementById('profileAvInitial').textContent = me.initial || 'K';
+    
+    if (me.avatar) {
+        const img = `<img src="${me.avatar}">`;
+        document.getElementById('navAvatar').innerHTML = img;
+        document.getElementById('createAvatar').innerHTML = img;
+        document.getElementById('profileAv').innerHTML = img;
+    }
+    if (me.bannerImage) {
+        document.getElementById('bannerImg').src = me.bannerImage;
+        document.getElementById('bannerImg').style.display = 'block';
+        document.getElementById('profileBanner').style.background = 'none';
+    }
+}
+
+async function watchUsers() {
+    db.collection('profiles').onSnapshot(snap => {
+        snap.forEach(doc => allUsers[doc.id] = { uid: doc.id, ...doc.data() });
+    });
+}
+
+function toast(msg) {
+    const t = document.getElementById('toastEl');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function openModal() { document.getElementById('overlay').classList.add('open'); }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function openStoryModal() { document.getElementById('storyModal').classList.add('open'); }
+function closeStoryModal() { document.getElementById('storyModal').classList.remove('open'); }
+
+/* ── STORY PUBLISHING ── */
+function handleStoryFile(inp) { storyFile = inp.files[0]; }
+async function publishStory() {
+    if(!storyFile) return toast('Select a file first!');
+    toast('Uploading to your story... 🌸');
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const formData = new FormData();
+        formData.append('file', e.target.result);
+        formData.append('upload_preset', 'kezz_media');
+        const res = await fetch('https://api.cloudinary.com/v1_1/dyspuqa0s/image/upload', {method:'POST', body:formData});
+        const d = await res.json();
+
+        await db.collection('stories').add({
+            uid: me.uid,
+            userName: me.name,
+            userAvatar: me.avatar || null,
+            mediaUrl: d.secure_url,
+            type: 'photo',
+            seenBy: [],
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 86400000).toISOString()
+        });
+
+        closeStoryModal();
+        loadStories();
+        toast('Story shared! ✨');
+    };
+    reader.readAsDataURL(storyFile);
+}
+</script>
 </body>
 </html>
